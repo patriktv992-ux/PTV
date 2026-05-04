@@ -1,72 +1,136 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <title>Odpočet do konce školního roku</title>
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            text-align: center;
-        }
-        .container {
-            background: rgba(0,0,0,0.25);
-            padding: 50px;
-            border-radius: 25px;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        }
-        h1 {
-            margin-bottom: 20px;
-            font-size: 2em;
-        }
-        #countdown {
-            font-size: 2.8em;
-            font-weight: bold;
-        }
-        .sub {
-            margin-top: 15px;
-            opacity: 0.8;
-            font-size: 0.9em;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Školní rok</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+
+.container {
+    background: rgba(0,0,0,0.25);
+    padding: 50px;
+    border-radius: 25px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    display: none;
+}
+
+h1 {
+    margin-bottom: 20px;
+    font-size: 2em;
+}
+
+#countdown {
+    font-size: 2.8em;
+    font-weight: bold;
+}
+
+.sub {
+    margin-top: 15px;
+    opacity: 0.8;
+    font-size: 0.9em;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>⏳ Odpočet do konce školního roku</h1>
-        <div id="countdown"></div>
-        <div class="sub">26. 6. 2026</div>
-    </div>
 
-    <script>
-        const targetDate = new Date("2026-06-26T10:00:00").getTime();
+<h1 id="loginText">Přihlas se pro vstup</h1>
+<button id="loginBtn">Přihlásit přes Google</button>
 
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const diff = targetDate - now;
+<div class="container" id="app">
+    <h1>⏳ Odpočet do konce školního roku</h1>
+    <div id="countdown"></div>
+    <div class="sub">26. 6. 2026</div>
+    <br>
+    <button onclick="logout()">Odhlásit</button>
+</div>
 
-            if (diff <= 0) {
-                document.getElementById("countdown").innerHTML = "🎉 Time Ended";
-                return;
-            }
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged }
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((diff / (1000 * 60)) % 60);
-            const seconds = Math.floor((diff / 1000) % 60);
+// 🔥 TVŮJ FIREBASE CONFIG
+const firebaseConfig = {
+  apiKey: "AIzaSyAEJ-lgYuZTex5dmmt1S45UdwN5MglI2IE",
+  authDomain: "galerie-17d91.firebaseapp.com",
+  projectId: "galerie-17d91",
+  storageBucket: "galerie-17d91.firebasestorage.app",
+  messagingSenderId: "429428012779",
+  appId: "1:429428012779:web:5bbf8fded33e90c29430ae",
+  measurementId: "G-1K0B4DB1CR"
+};
 
-            document.getElementById("countdown").innerHTML =
-                `${days} dní ${hours} hodin ${minutes} minut ${seconds} sekund`;
-        }
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
 
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
-    </script>
+// login
+document.getElementById("loginBtn").onclick = () => {
+    signInWithPopup(auth, provider);
+};
+
+// logout
+window.logout = function () {
+    signOut(auth);
+};
+
+// kontrola přihlášení
+onAuthStateChanged(auth, user => {
+    if (user) {
+        document.getElementById("app").style.display = "block";
+        document.getElementById("loginBtn").style.display = "none";
+        document.getElementById("loginText").style.display = "none";
+    } else {
+        document.getElementById("app").style.display = "none";
+        document.getElementById("loginBtn").style.display = "block";
+        document.getElementById("loginText").style.display = "block";
+    }
+});
+
+// countdown
+const targetDate = new Date("2026-06-26T00:00:00").getTime();
+
+function updateCountdown() {
+    const now = new Date().getTime();
+    const diff = targetDate - now;
+
+    if (diff <= 0) {
+        document.getElementById("countdown").innerHTML = "🎉 Timer Ended";
+        return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    document.getElementById("countdown").innerHTML =
+        `${days} dní ${hours} hodin ${minutes} minut ${seconds} sekund`;
+}
+
+setInterval(updateCountdown, 1000);
+updateCountdown();
+</script>
+
 </body>
 </html>
